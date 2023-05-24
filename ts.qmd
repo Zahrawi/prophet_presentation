@@ -251,7 +251,7 @@ ggplot() +
 ```{r}
 ggplot() +
   geom_line(data = data, aes(x = ds, y = y), color = "blue") +
-  geom_line(data = forecast, aes(x = ds, y = yhat), color = "red", linetype = "dashed") +  geom_vline(xintercept = 2015, linetype = "dashed") +
+  geom_line(data = forecast, aes(x = ds, y = yhat), color = "green", linetype = "dashed") +  geom_vline(xintercept = 2015, linetype = "dashed") +
   labs(title = "Lung Cancer Incidence in Japan",
        subtitle = "Observed vs. Counterfactual Without Cigarette Ban",
        x = "Year",
