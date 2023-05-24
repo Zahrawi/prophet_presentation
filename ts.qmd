@@ -1,0 +1,260 @@
+---
+title: "Interrupted Time Series Analysis in Policy Evaluation with Prophet Package by Facebook in R"
+author: "Hasan Jamil"
+format: revealjs
+fontsize: 20pt
+---
+
+# What is Interrupted Time-Series Modeling?
+
+- Interrupted time-series modeling is a quasi-experimental design.
+- It is used to infer the effectiveness of a health policy intervention.
+- It accounts for temporal dependence within a single system or unit.
+- It is increasingly being used to evaluate the impact of large-scale health interventions.
+
+: [Assessing health care interventions via an interrupted time series design](https://pubmed.ncbi.nlm.nih.gov/30616298/)
+: [Interrupted time series analysis using autoregressive integrated moving average (ARIMA) models](https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-021-01235-8)
+
+
+# Yearly consumption of tobacco from t0 to t10
+
+![Time Series Plot 1](https://ds4ps.org/pe4ps-textbook/docs/FIGURE/TimeSeries/Picture1.png)
+
+
+
+# No policy effect
+
+![Time Series Plot 2.1](https://ds4ps.org/pe4ps-textbook/docs/FIGURE/TimeSeries/Picture2.1.png)
+
+
+
+# Immediate policy effect
+
+![Time Series Plot 2.2](https://ds4ps.org/pe4ps-textbook/docs/FIGURE/TimeSeries/Picture2.2.png)
+
+
+
+# Sustained policy effect
+
+![Time Series Plot 2.3](https://ds4ps.org/pe4ps-textbook/docs/FIGURE/TimeSeries/Picture2.3.png)
+
+
+
+# Immediate + sustained policy effect
+
+![Time Series Plot 2.4](https://ds4ps.org/pe4ps-textbook/docs/FIGURE/TimeSeries/Picture2.4.png)
+
+# Why is it important in healthcare?
+
+- Interrupted time-series modeling is increasingly being used to evaluate the impact of large-scale health interventions.
+- It is a valuable study design for evaluating the effectiveness of population-level health interventions that have been implemented at a clearly defined point in time.
+- It is considered one of the best designs for establishing causality when randomized controlled trials are neither feasible nor ethical.
+- It allows for flexible modeling of different types of impacts and can account for underlying trends, autocorrelation, and seasonality.
+
+[Interrupted time series analysis using autoregressive integrated moving average (ARIMA) models](https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-021-01235-8)
+[Interrupted time series regression for the evaluation of public health interventions](https://academic.oup.com/ije/article/46/1/348/2622842)
+
+# Prophet Package
+
+- Developed by Facebook
+- Time series forecasting tool
+- Uses an additive regression model
+- Includes components for trend, seasonality, and holidays
+- Flexible and easy to use
+
+# Additive Regression Model
+
+- Sum of individual effects
+- In Prophet, model is represented as: y(t) = g(t) + s(t) + h(t) + e(t)
+- g(t): trend component
+- s(t): seasonality component
+- h(t): holiday component
+- e(t): error term
+ 
+# Using Prophet in R
+
+## Step 1: Install and load the Prophet package
+- Prophet can be installed from CRAN
+- Open R console or RStudio
+- Install from CRAN using `install.packages("prophet")`
+- Load with `library(prophet)`
+
+```r
+# Install Prophet
+install.packages("prophet")
+
+# Load Prophet
+library(prophet)
+```
+
+## Step 2: Prepare the data
+
+- Prophet requires data in specific format
+- Column for date/time named `ds`
+- Column for value to be forecasted named `y`
+- Split data into pre- and post-intervention periods
+
+```r
+# Load and prepare data
+df <- read_csv("my_data.csv") %>%
+  rename(ds = date, y = value)
+
+# Split data into pre- and post-intervention
+intervention_date <- as.Date("2020-01-01")
+pre_intervention <- df %>% filter(ds < intervention_date)
+post_intervention <- df %>% filter(ds >= intervention_date)
+```
+
+## Step 3: Create a Prophet model
+
+- Use `prophet()` function to create model
+- Optional arguments to customize model
+- Specify seasonality, holidays, etc.
+- Fit model to pre-intervention data
+
+```r
+# Create Prophet model
+m <- prophet(pre_intervention)
+```
+## Step 4: Make predictions and estimate impact
+- Make predictions for post-intervention period
+- Calculate difference between predicted and observed values to estimate impact
+
+```r
+# Make predictions for post-intervention period
+future <- make_future_dataframe(m, periods = nrow(post_intervention))
+forecast <- predict(m, future)
+
+# Calculate difference between predicted and observed values
+impact <- post_intervention$y - forecast$yhat
+```
+
+## Step 5: Plot results
+
+- Plot pre- and post-intervention data and predictions
+```r
+# Plot results
+plot(m, forecast)
+points(post_intervention$ds, post_intervention$y)
+```
+
+# Example: Lung Cancer ASI in Japan
+## The Data
+
+```{r}
+# Set the seed for reproducibility
+set.seed(123)
+
+# Create a time series from 1980 to 2023
+years <- seq(1980, 2023)
+
+# Generate a smooth trend in age-standardized incidence
+lung_cancer_incidence <- 100 + seq(-5, 5, length.out = length(years))
+
+# Add some random noise to the data
+lung_cancer_incidence <- lung_cancer_incidence + rnorm(length(years), mean = 0, sd = 1)
+
+# Simulate the banning of cigarettes in 2015
+ban_year <- 2015
+ban_index <- which(years == ban_year)
+
+# Cause a slight decrease in lung cancer incidence after the ban
+lung_cancer_incidence[ban_index:length(lung_cancer_incidence)] <- lung_cancer_incidence[ban_index:length(lung_cancer_incidence)] - seq(0, 5, length.out = length(lung_cancer_incidence[ban_index:length(lung_cancer_incidence)]))
+
+# Create a data frame
+data <- data.frame(years, lung_cancer_incidence)
+# Load the ggplot2 library
+library(ggplot2)
+
+# Plot the data using ggplot
+ggplot(data, aes(x = years, y = lung_cancer_incidence)) +
+  geom_line() +
+  geom_vline(xintercept = 2015, linetype = "dashed") +
+  labs(title = "Lung Cancer Incidence in Japan",
+       subtitle = "Simulated Impact of Cigarette Ban in 2015",
+       x = "Year",
+       y = "Lung Cancer Incidence")
+```
+
+## Step 1: Load Prophet
+
+```{r}
+library(prophet)
+```
+
+```r
+library(prophet)
+```
+
+## Step 2: Prepare the Data
+
+```{r}
+data
+```
+
+## Step 2: Prepare the data
+- Prepare the data names
+- Split it to pre- and post-intervention periods
+
+
+```r
+data$ds <- as.Date(paste0(data$years, "-01-01"))
+data$y <- data$lung_cancer_incidence
+
+# Spliting
+before <- data[data$years <= 2015,]
+after <- data[data$years > 2015,]
+```
+```{r}
+data$ds <- as.Date(paste0(data$years, "-01-01"))
+data$y <- data$lung_cancer_incidence
+before <- data[data$years <= 2015,]
+after <- data[data$years > 2015,]
+```
+
+## Step 3: Create a Prophet model
+
+```r
+m <- prophet(before)
+```
+
+```{r}
+m <- prophet(before)
+```
+
+## Step 4: Forecasting
+
+```r
+future <- make_future_dataframe(m, periods = length(test_data$years), freq = "year")
+forecast <- predict(m, future)
+forecast$ds <- as.Date(forecast$ds)
+```
+
+```{r}
+future <- make_future_dataframe(m, periods = length(after$years), freq = "year")
+forecast <- predict(m, future)
+forecast$ds <- as.Date(forecast$ds)
+```
+
+## Step 5: Plot results
+
+```r
+ggplot() +
+  geom_line(data = data, aes(x = ds, y = y), color = "blue") +
+  geom_line(data = forecast, aes(x = ds, y = yhat), color = "red", linetype = "dashed") +  geom_vline(xintercept = 2015, linetype = "dashed") +
+  labs(title = "Lung Cancer Incidence in Japan",
+       subtitle = "Observed vs. Counterfactual Without Cigarette Ban",
+       x = "Year",
+       y = "Lung Cancer Incidence")
+```
+
+```{r}
+ggplot() +
+  geom_line(data = data, aes(x = ds, y = y), color = "blue") +
+  geom_line(data = forecast, aes(x = ds, y = yhat), color = "red", linetype = "dashed") +  geom_vline(xintercept = 2015, linetype = "dashed") +
+  labs(title = "Lung Cancer Incidence in Japan",
+       subtitle = "Observed vs. Counterfactual Without Cigarette Ban",
+       x = "Year",
+       y = "Lung Cancer Incidence")
+
+```
